@@ -1,14 +1,17 @@
 resources:
-  - frontend/deployment.yml
-  - backend/deployment.yml
-  - frontend/service.yml
-  - backend/service.yml
-  - ingress.yml
+- frontend/deployment.yml
+- backend/deployment.yml
+- frontend/service.yml
+- backend/service.yml
+- ingress.yml
 
 images:
-  - name: frontend
-    newName: 194722426008.dkr.ecr.us-west-1.amazonaws.com/devopsnanuvem/prod/frontend
-    newTag: latest
-  - name: backend
-    newName: 194722426008.dkr.ecr.us-west-1.amazonaws.com/devopsnanuvem/prod/backend
-    newTag: latest
+
+- name: backend
+  newName: 194722426008.dkr.ecr.us-west-1.amazonaws.com/devopsnanuvem/prod/backend
+  newTag: latest
+- name: frontend
+  newName: 194722426008.dkr.ecr.us-west-1.amazonaws.com/devopsnanuvem/prod/frontend
+  newTag: latest
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
