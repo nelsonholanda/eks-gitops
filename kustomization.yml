@@ -3,7 +3,7 @@ resources:
   - backend/deployment.yml
   - frontend/service.yml
   - backend/service.yml
-  - ingress.yml
+  - ingress.ymlaa
 
 images:
   - name: frontend
