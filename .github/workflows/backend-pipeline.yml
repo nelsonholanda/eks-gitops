@@ -1,1 +1,65 @@
 
+name: Backend Pipeline
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'dvn-workshop-gitops/backend/**'
+
+permissions:
+  id-token: write
+      
+env:
+  BACKEND_REPOSITORY: devopsnanuvem/prod/backend
+  IMAGE_TAG: ${{ github.sha }}
+jobs:
+  backend:
+    name: Backend Continous Deployment
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region: ${{ vars.aws_region }}
+
+    - name: npm install, build and test
+      run: |
+        npm install
+        npm run build --if-present
+        npm test
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build, tag, and push docker image to Amazon ECR
+      env:
+        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      run: |
+        docker build -f ./dvn-workshop-apps/backend/YouTubeLiveApp/Dockerfile -t $REGISTRY/$BACKEND_REPOSITORY:$IMAGE_TAG .
+        docker push $REGISTRY/$BACKEND_REPOSITORY:$IMAGE_TAG
+
+    - uses: actions/checkout@v4
+      with:
+        repository: nelsonholanda/eks-gitops
+        token: ${{ secrets.PAT }}
+
+    - name: Kustomize Edit Image
+      env:
+        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      run: |
+        kustomize edit set image $REGISTRY/$BACKEND_REPOSITORY=$REGISTRY/$BACKEND_REPOSITORY:$IMAGE_TAG
+        git config --global user.name "nelsonholanda"
+        git config --global user.email "nelson.holanda@hotmail.com"
+        git add ./kustomization.yaml
+        git commit -m "Update backend image to $IMAGE_TAG"
+        git push
+
+
+        
